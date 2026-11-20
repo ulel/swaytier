@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"slices"
@@ -70,6 +71,10 @@ func (a *app) dispatch(cmd string, args []string) error {
 		if p, ok := a.pickProject("move workspace to", args); ok {
 			return a.assign(p)
 		}
+	case "output":
+		if out := nextOutput(a.wss); out != "" {
+			return a.c.run("focus output " + quote(out))
+		}
 	case "label":
 		return a.label(args)
 	case "menu":
@@ -105,6 +110,26 @@ func (a *app) focused() (workspace, bool) {
 		}
 	}
 	return workspace{}, false
+}
+
+// nextOutput is the output after the focused one, going left to right and
+// then top to bottom, wrapping around. It is empty with a single output.
+func nextOutput(wss []workspace) string {
+	var vis []workspace // one visible workspace per output
+	for _, w := range wss {
+		if w.Visible {
+			vis = append(vis, w)
+		}
+	}
+	slices.SortFunc(vis, func(x, y workspace) int {
+		return cmp.Or(x.Rect.X-y.Rect.X, x.Rect.Y-y.Rect.Y, strings.Compare(x.Output, y.Output))
+	})
+	for i, w := range vis {
+		if w.Focused && len(vis) > 1 {
+			return vis[(i+1)%len(vis)].Output
+		}
+	}
+	return ""
 }
 
 // commit saves the state, runs the commands and refreshes the bars.

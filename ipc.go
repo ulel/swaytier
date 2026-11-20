@@ -30,6 +30,10 @@ type workspace struct {
 	Focused bool   `json:"focused"`
 	Visible bool   `json:"visible"`
 	Urgent  bool   `json:"urgent"`
+	Rect    struct {
+		X int `json:"x"`
+		Y int `json:"y"`
+	} `json:"rect"`
 }
 
 type node struct {

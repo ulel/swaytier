@@ -16,6 +16,7 @@ it, and the label is only there for reading and searching.
 | `Mod+Tab` | Previous project |
 | `Mod+m` | Home project, or back again |
 | `Mod+g` | Fuzzy menu of every window and workspace |
+| `Mod+i` | Focus the next output (a toggle with two) |
 | `Mod+n` | Label the current workspace (`-` clears it) |
 | `Mod+Shift+p` | Send window to another project |
 | `Mod+Control+p` | Move the whole workspace to another project |

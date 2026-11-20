@@ -147,6 +147,25 @@ func TestFollow(t *testing.T) {
 	}
 }
 
+func TestNextOutput(t *testing.T) {
+	at := func(name, out string, x int, focused bool) workspace {
+		w := workspace{Name: name, Output: out, Visible: true, Focused: focused}
+		w.Rect.X = x
+		return w
+	}
+	wss := []workspace{at("a:1", "right", 3840, false), at("a:2", "left", 0, false), {Name: "a:3", Output: "left"}, at("a:4", "mid", 1920, true)}
+	if got := nextOutput(wss); got != "right" {
+		t.Errorf("next after mid = %q", got)
+	}
+	wss[3].Focused, wss[0].Focused = false, true
+	if got := nextOutput(wss); got != "left" {
+		t.Errorf("next after right = %q, want it to wrap", got)
+	}
+	if got := nextOutput(wss[:1]); got != "" {
+		t.Errorf("single output gave %q", got)
+	}
+}
+
 func TestPrune(t *testing.T) {
 	st := &state{Active: "crmx", Recent: []string{"crmx", "lumen", "gone"}, Projects: map[string]*project{"gone": {Last: 1}}}
 	st.prune([]workspace{{Name: "lumen:2"}})
