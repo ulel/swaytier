@@ -24,7 +24,9 @@ func newApp() (*app, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &app{c, loadState(), wss}, nil
+	st := loadState()
+	st.prune(wss)
+	return &app{c, st, wss}, nil
 }
 
 func (a *app) dispatch(cmd string, args []string) error {

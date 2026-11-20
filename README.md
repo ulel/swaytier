@@ -29,6 +29,7 @@ Bindings live in `sway/swaytier.conf`.
   output does not change it.
 - Leaving a project records which of its workspaces were on screen and which
   had focus. Coming back restores them.
+- A project disappears from the menus once its last workspace is gone.
 - Workspaces created outside swaytier (startup, a new output) are renamed
   into the active project.
 - The bar shows the active project and its workspaces, then other projects

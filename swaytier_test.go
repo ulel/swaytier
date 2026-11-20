@@ -126,3 +126,11 @@ func TestBarLine(t *testing.T) {
 		}
 	}
 }
+
+func TestPrune(t *testing.T) {
+	st := &state{Active: "crmx", Recent: []string{"crmx", "lumen", "gone"}, Projects: map[string]*project{"gone": {Last: 1}}}
+	st.prune([]workspace{{Name: "lumen:2"}})
+	if !reflect.DeepEqual(st.Recent, []string{"crmx", "lumen"}) || st.Projects["gone"] != nil {
+		t.Errorf("prune left %v %v", st.Recent, st.Projects)
+	}
+}

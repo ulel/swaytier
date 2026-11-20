@@ -80,6 +80,18 @@ func (s *state) activate(name string) {
 	s.Active = name
 }
 
+// prune forgets projects that have no workspaces left, so they drop out of
+// the menus. The active project always stays.
+func (s *state) prune(wss []workspace) {
+	s.Recent = slices.DeleteFunc(s.Recent, func(p string) bool {
+		if p == s.Active || len(byNum(wss, p)) > 0 {
+			return false
+		}
+		delete(s.Projects, p)
+		return true
+	})
+}
+
 func (s *state) forget(name string) {
 	s.Recent = slices.DeleteFunc(s.Recent, func(r string) bool { return r == name })
 	delete(s.Projects, name)

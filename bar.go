@@ -54,6 +54,7 @@ func bar() error {
 			return err
 		}
 		st := loadState()
+		st.prune(wss)
 		// Workspaces created outside swaytier (new output, startup) join
 		// the active project; the rename triggers the next render.
 		query.run(adoptCmds(st, wss)...)
