@@ -8,10 +8,12 @@ import (
 	"strings"
 )
 
-// Colours match the stock waybar style.
+// Catppuccin Mocha, matching the waybar and kitty themes.
 const (
-	colFocused = "#64727D"
-	colUrgent  = "#eb4d4b"
+	colProject = "#b4befe" // lavender
+	colFocused = "#cba6f7" // mauve
+	colUrgent  = "#f38ba8" // red
+	colOnFill  = "#11111b" // crust, text on a filled cell
 )
 
 // bar prints one waybar JSON line whenever workspaces or projects change.
@@ -73,7 +75,7 @@ func bar() error {
 func barLine(st *state, wss []workspace) string {
 	var text, tip strings.Builder
 	class := ""
-	text.WriteString("<b>" + html.EscapeString(st.Active) + "</b> ")
+	text.WriteString(`<span foreground="` + colProject + `"><b>` + html.EscapeString(st.Active) + `</b></span> `)
 	for _, w := range sorted(byNum(wss, st.Active)) {
 		text.WriteString(cell(w))
 	}
@@ -120,9 +122,9 @@ func cell(w workspace) string {
 	body := " " + html.EscapeString(n.Short()) + " "
 	switch {
 	case w.Focused:
-		return `<span background="` + colFocused + `"><b>` + body + `</b></span>`
+		return `<span background="` + colFocused + `" foreground="` + colOnFill + `"><b>` + body + `</b></span>`
 	case w.Urgent:
-		return `<span background="` + colUrgent + `">` + body + `</span>`
+		return `<span background="` + colUrgent + `" foreground="` + colOnFill + `">` + body + `</span>`
 	case w.Visible:
 		return `<span underline="single">` + body + `</span>`
 	}

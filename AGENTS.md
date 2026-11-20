@@ -78,7 +78,8 @@ Careful when testing by hand:
   (Slack, mail, chat). The author is undecided.
 - Opening a terminal in the project's directory (needs a project to
   directory mapping).
-- Bar colours are constants in `bar.go`, copied from the stock waybar style.
+- Bar colours are constants in `bar.go` (Catppuccin Mocha, the same palette
+  as `~/.config/waybar/style.css` and the kitty theme).
 - Workspaces in the bar are not individually clickable.
 - In the wofi project menu, a new name that is a fragment of an existing
   one may select the existing project. `swaytier project NAME` always works.
