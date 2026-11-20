@@ -127,6 +127,26 @@ func TestBarLine(t *testing.T) {
 	}
 }
 
+func TestFollow(t *testing.T) {
+	st := &state{Active: "lumen", Recent: []string{"lumen", "home"}, Projects: map[string]*project{}}
+	wss := []workspace{
+		{Name: "lumen:2", Visible: true},
+		{Name: "home:10", Visible: true, Focused: true},
+	}
+	if !st.follow(wss) || st.Active != "home" || !reflect.DeepEqual(st.Recent, []string{"home", "lumen"}) {
+		t.Errorf("follow gave %q %v", st.Active, st.Recent)
+	}
+	if p := st.Projects["lumen"]; p == nil || p.Last != 2 {
+		t.Errorf("follow did not record the project it left: %+v", p)
+	}
+	if st.follow(wss) {
+		t.Error("follow changed a project that already has the focus")
+	}
+	if wss[1].Name = "scratch"; st.follow(wss) || st.Active != "home" {
+		t.Error("follow left the project for an unmanaged workspace")
+	}
+}
+
 func TestPrune(t *testing.T) {
 	st := &state{Active: "crmx", Recent: []string{"crmx", "lumen", "gone"}, Projects: map[string]*project{"gone": {Last: 1}}}
 	st.prune([]workspace{{Name: "lumen:2"}})

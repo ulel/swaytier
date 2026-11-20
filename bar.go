@@ -54,6 +54,7 @@ func bar() error {
 			return err
 		}
 		st := loadState()
+		st.follow(wss) // not saved: the next command does that
 		st.prune(wss)
 		// Workspaces created outside swaytier (new output, startup) join
 		// the active project; the rename triggers the next render.
@@ -86,11 +87,11 @@ func barLine(st *state, wss []workspace) string {
 		if p == st.Active || len(list) == 0 {
 			continue
 		}
-		// Other projects are dimmed; show where the focus is if it is
-		// outside the active project.
+		// Other projects are dimmed, except one that is on another output:
+		// that shows which of its workspaces is on screen.
 		label, attr := html.EscapeString(p), ` alpha="60%"`
 		for _, w := range list {
-			if w.Focused {
+			if w.Visible {
 				n, _ := parseName(w.Name)
 				label, attr = html.EscapeString(p+" ▸ "+n.Short()), ` underline="single"`
 			}

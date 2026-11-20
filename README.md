@@ -24,16 +24,16 @@ Bindings live in `sway/swaytier.conf`.
 
 ## Behaviour
 
-- The active project only changes when you ask for it: project menu, toggle,
-  home, or jumping to a window through `Mod+g`. Moving focus to another
-  output does not change it.
+- The active project is the one that has the focus. Outputs can show
+  different projects; moving to another output moves the number keys with
+  you.
 - Leaving a project records which of its workspaces were on screen and which
   had focus. Coming back restores them.
 - A project disappears from the menus once its last workspace is gone.
 - Workspaces created outside swaytier (startup, a new output) are renamed
   into the active project.
 - The bar shows the active project and its workspaces, then other projects
-  dimmed. Focus outside the active project is shown as `home ▸ 10 comms`.
+  dimmed. A project on another output is shown as `home ▸ 10 comms`.
 
 ## Install
 

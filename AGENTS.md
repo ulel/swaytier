@@ -35,11 +35,13 @@ wofi returns when you type text that matches nothing.
 - **The workspace name is the source of truth** for project, number and
   label. The state file only holds the active project, the recency order
   and what each project looked like when it was last left.
-- **The active project is sticky.** It changes only through `enter`
-  (project switch, toggle, home, menu jump), never from focus moving.
-  `send` and `assign` deliberately do not change it.
-- **Snapshots are taken when leaving a project**, in `enter`. Nothing tracks
-  focus continuously.
+- **The active project follows the focus.** `state.follow` runs at the
+  start of every command and in the bar, so outputs can show different
+  projects and the number keys act where the focus is. Only commands save
+  the result: several bars run at once and must not write the state file.
+  `send` and `assign` deliberately do not change the active project.
+- **Snapshots are taken when leaving a project**, in `enter` and `follow`.
+  Nothing tracks focus continuously.
 - **Bars refresh on sway workspace events and on a tick** sent by `commit`.
   Write the state file before running sway commands so the bar reads fresh
   state.

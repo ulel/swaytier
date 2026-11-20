@@ -80,6 +80,20 @@ func (s *state) activate(name string) {
 	s.Active = name
 }
 
+// follow makes the project that has the focus the active one, so that
+// moving to another output moves the number keys with it. It reports
+// whether the active project changed.
+func (s *state) follow(wss []workspace) bool {
+	for _, w := range wss {
+		if n, ok := parseName(w.Name); ok && w.Focused && n.Project != s.Active {
+			snapshot(s, wss)
+			s.activate(n.Project)
+			return true
+		}
+	}
+	return false
+}
+
 // prune forgets projects that have no workspaces left, so they drop out of
 // the menus. The active project always stays.
 func (s *state) prune(wss []workspace) {

@@ -25,6 +25,9 @@ func newApp() (*app, error) {
 		return nil, err
 	}
 	st := loadState()
+	if st.follow(wss) {
+		st.save() // so toggle knows where we came from
+	}
 	st.prune(wss)
 	return &app{c, st, wss}, nil
 }
