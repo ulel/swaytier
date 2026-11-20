@@ -39,5 +39,11 @@ func pick(prompt string, lines []string) (string, bool) {
 
 // input asks for a line of free text.
 func input(prompt string) (string, bool) {
-	return ask(menuCmd(prompt, "--lines", "2"), nil)
+	if os.Getenv("SWAYTIER_MENU") != "" {
+		return ask(menuCmd(prompt), nil)
+	}
+	// wofi hides the prompt while the entry has focus, so repeat it as a
+	// list line; --exec-search makes Enter return the typed text, never
+	// that line.
+	return ask(menuCmd(prompt, "--exec-search", "--lines", "3"), []string{prompt})
 }

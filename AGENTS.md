@@ -84,6 +84,10 @@ Careful when testing by hand:
 - In the wofi project menu, a new name that is a fragment of an existing
   one may select the existing project. `swaytier project NAME` always works.
 
+- wofi is themed in `~/.config/wofi` (Catppuccin Mocha). The label prompt
+  relies on wofi's `--exec-search` returning the typed text; not yet
+  confirmed by hand.
+
 ## Conventions
 
 - Keep code and prose concise.
