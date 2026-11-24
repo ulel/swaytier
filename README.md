@@ -13,7 +13,7 @@ it, and the label is only there for reading and searching.
 | `Mod+1..0` | Workspace 1–10 of the active project |
 | `Mod+Shift+1..0` | Move window to that workspace |
 | `Mod+p` | Switch project (type a new name to create one) |
-| `Mod+Tab` | Previous project |
+| `Mod+Tab` | Previous project; home is passed over, so `Mod+m` does not disturb it |
 | `Mod+m` | Home project, or back again |
 | `Mod+g` | Fuzzy menu of every window and workspace |
 | `Mod+i` | Focus the next output (a toggle with two) |

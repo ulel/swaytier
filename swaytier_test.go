@@ -173,3 +173,28 @@ func TestPrune(t *testing.T) {
 		t.Errorf("prune left %v %v", st.Recent, st.Projects)
 	}
 }
+
+func TestPreviousPassesOverHome(t *testing.T) {
+	// From x to y, then a visit home: toggle goes to y, then x, then y.
+	st := &state{Active: "y", Recent: []string{"y", "x", "home"}}
+	st.activate("home")
+	for _, want := range []string{"y", "x", "y"} {
+		got := st.previous()
+		if got != want {
+			t.Fatalf("previous = %q, want %q (recent %v)", got, want, st.Recent)
+		}
+		st.activate(got)
+	}
+	// With one other project, toggle still reaches home and comes back.
+	st = &state{Active: "x", Recent: []string{"x", "home"}}
+	if got := st.previous(); got != "home" {
+		t.Errorf("previous with only home left = %q", got)
+	}
+	st.activate("home")
+	if got := st.previous(); got != "x" {
+		t.Errorf("previous from home = %q", got)
+	}
+	if got := (&state{Active: "home", Recent: []string{"home"}}).previous(); got != "" {
+		t.Errorf("previous with nothing else = %q", got)
+	}
+}

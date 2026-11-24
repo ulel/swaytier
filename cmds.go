@@ -51,16 +51,13 @@ func (a *app) dispatch(cmd string, args []string) error {
 		if p, ok := a.pickProject("project", args); ok {
 			return a.switchTo(p)
 		}
-	case "toggle":
-		if len(a.st.Recent) > 1 {
-			return a.switchTo(a.st.Recent[1])
+	case "toggle", "home":
+		p := a.st.previous()
+		if cmd == "home" && a.st.Active != homeProject {
+			p = homeProject
 		}
-	case "home":
-		if a.st.Active != homeProject {
-			return a.switchTo(homeProject)
-		}
-		if len(a.st.Recent) > 1 {
-			return a.switchTo(a.st.Recent[1])
+		if p != "" {
+			return a.switchTo(p)
 		}
 	case "send":
 		if p, ok := a.pickProject("send window to", args); ok {

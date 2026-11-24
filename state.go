@@ -80,6 +80,22 @@ func (s *state) activate(name string) {
 	s.Active = name
 }
 
+// previous is the project that toggle goes to: the most recent one other
+// than the active. Home has its own key and is passed over, so a visit
+// there does not come between the two projects being toggled; it is used
+// only when there is nothing else.
+func (s *state) previous() string {
+	for _, p := range s.Recent {
+		if p != s.Active && p != homeProject {
+			return p
+		}
+	}
+	if s.Active != homeProject && slices.Contains(s.Recent, homeProject) {
+		return homeProject
+	}
+	return ""
+}
+
 // follow makes the project that has the focus the active one, so that
 // moving to another output moves the number keys with it. It reports
 // whether the active project changed.
