@@ -27,9 +27,9 @@ const usage = `usage: swaytier <command>
   forget NAME     remove a project from the list
   status          print projects and workspaces
   other N         switch to the N-th other project in the bar
-  bar             waybar module: the active project, running all the time
-  bar ws N        waybar module: workspace N of the active project, once
-  bar other N     waybar module: the N-th other project, once
+  bar             waybar module: the active project
+  bar ws N        waybar module: workspace N of the active project
+  bar other N     waybar module: the N-th other project
 `
 
 func main() {

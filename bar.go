@@ -4,9 +4,9 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"html"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -14,12 +14,15 @@ import (
 )
 
 // The bar is made of several waybar modules so that each workspace and
-// project can be clicked: one that runs all the time and shows the active
-// project, and one per slot that waybar runs again whenever it gets
-// barSignal.
+// project can be clicked: one that shows the active project, and one per
+// slot. Running a command per slot on every change made the bar update
+// piece by piece over a few tenths of a second, so instead the project
+// module's process writes every slot's line to a file of its own, and each
+// slot module is a tail following its file. Nothing is started on a change.
 const (
-	barSignal = 8  // SIGRTMIN+8, the "signal" of the slot modules
-	sigrtmin  = 34 // glibc's SIGRTMIN, which is what waybar counts from
+	wsSlots    = 10
+	otherSlots = 10
+	slotLimit  = 64 << 10 // a slot file is started over beyond this size
 )
 
 func bar(args []string) error {
@@ -28,7 +31,7 @@ func bar(args []string) error {
 	}
 	if len(args) == 2 && (args[0] == "ws" || args[0] == "other") {
 		if n, err := strconv.Atoi(args[1]); err == nil && n > 0 {
-			return barSlot(args[0], n)
+			return barSlot(slotPath(args[0], n))
 		}
 	}
 	return errors.New("usage: swaytier bar [ws N | other N]")
@@ -47,8 +50,8 @@ func view(c *conn) (*state, []workspace, error) {
 	return st, wss, nil
 }
 
-// barProject prints the active project whenever it changes, and tells
-// waybar to redraw the slots whenever workspaces or projects change.
+// barProject prints the active project whenever it changes, and keeps the
+// slot files up to date.
 func barProject() error {
 	events, err := dial()
 	if err != nil {
@@ -81,6 +84,7 @@ func barProject() error {
 	out := bufio.NewWriter(os.Stdout)
 	last := ""
 	first := barLock()
+	written := map[string]string{}
 	parent := os.Getppid()
 	for {
 		if os.Getppid() != parent {
@@ -101,7 +105,7 @@ func barProject() error {
 			last = line
 		}
 		if first() {
-			signalWaybar()
+			writeSlots(st, wss, written)
 		}
 		select {
 		case <-wake:
@@ -111,9 +115,9 @@ func barProject() error {
 	}
 }
 
-// barLock picks one of the bar processes (there is one per output) to do
-// the signalling, so that the slots are redrawn once per change. The
-// returned function reports whether this process is the one.
+// barLock picks one of the bar processes (there is one per output) to
+// write the slot files. The returned function reports whether this
+// process is the one.
 func barLock() func() bool {
 	path := statePath()
 	os.MkdirAll(filepath.Dir(path), 0o755)
@@ -129,33 +133,52 @@ func barLock() func() bool {
 	}
 }
 
-func signalWaybar() {
-	comms, _ := filepath.Glob("/proc/[0-9]*/comm")
-	for _, comm := range comms {
-		if name, err := os.ReadFile(comm); err == nil && strings.TrimSpace(string(name)) == "waybar" {
-			pid, _ := strconv.Atoi(filepath.Base(filepath.Dir(comm)))
-			syscall.Kill(pid, syscall.Signal(sigrtmin+barSignal))
+func slotPath(kind string, n int) string {
+	return filepath.Join(strings.TrimSuffix(statePath(), ".json")+".slots", kind+strconv.Itoa(n))
+}
+
+// writeSlots appends the line of every slot that changed to its file.
+// written holds what each file ends with.
+func writeSlots(st *state, wss []workspace, written map[string]string) {
+	put := func(path, line string) {
+		old, known := written[path]
+		if known && old == line {
+			return
 		}
+		flags := os.O_CREATE | os.O_WRONLY | os.O_APPEND
+		if info, err := os.Stat(path); !known || err == nil && info.Size() > slotLimit {
+			flags |= os.O_TRUNC // tail notices and carries on from the top
+		}
+		os.MkdirAll(filepath.Dir(path), 0o755)
+		if f, err := os.OpenFile(path, flags, 0o644); err == nil {
+			if _, err := f.WriteString(line + "\n"); err == nil {
+				written[path] = line
+			}
+			f.Close()
+		}
+	}
+	for n := 1; n <= wsSlots; n++ {
+		text, class := wsSlot(st, wss, n)
+		put(slotPath("ws", n), module(text, "", class))
+	}
+	for n := 1; n <= otherSlots; n++ {
+		text, class := otherSlot(st, wss, n)
+		put(slotPath("other", n), module(text, "", class))
 	}
 }
 
-// barSlot prints one slot once: workspace n of the active project, or the
-// n-th other project. An empty text makes waybar hide the module.
-func barSlot(kind string, n int) error {
-	c, err := dial()
+// barSlot turns this process into a tail that prints the slot's last line
+// and every new one. An empty text makes waybar hide the module.
+func barSlot(path string) error {
+	os.MkdirAll(filepath.Dir(path), 0o755)
+	if f, err := os.OpenFile(path, os.O_CREATE, 0o644); err == nil {
+		f.Close()
+	}
+	tail, err := exec.LookPath("tail")
 	if err != nil {
 		return err
 	}
-	st, wss, err := view(c)
-	if err != nil {
-		return err
-	}
-	text, class := otherSlot(st, wss, n)
-	if kind == "ws" {
-		text, class = wsSlot(st, wss, n)
-	}
-	fmt.Println(module(text, "", class))
-	return nil
+	return syscall.Exec(tail, []string{"tail", "-n", "1", "-F", path}, os.Environ())
 }
 
 func module(text, tooltip, class string) string {

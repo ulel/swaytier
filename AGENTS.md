@@ -60,12 +60,16 @@ waybar and therefore `swaytier bar`. After changing only Go code,
 `pkill -x swaytier` (waybar restarts it after a second).
 
 The bar is one waybar module per workspace and project so that each can be
-clicked. `swaytier bar` sends waybar SIGRTMIN+8 on every change, and waybar
-then runs the slot modules again. With several outputs there are several
-`swaytier bar` processes; a lock file in `$XDG_RUNTIME_DIR` picks the one
-that signals. After changing the waybar files restart waybar
-(`swaymsg reload`); with waybar 0.9.24 a `SIGUSR2` reload leaves the slot
-modules hidden.
+clicked. `swaytier bar` writes every slot's line to a file under
+`$XDG_RUNTIME_DIR/swaytier/<socket>.slots/`, and `swaytier bar ws N` /
+`bar other N` replace themselves with `tail -n 1 -F` on that file. With
+several outputs there are several `swaytier bar` processes; a lock file
+picks the one that writes.
+
+Do not go back to running a command per slot on each change (waybar
+`interval: once` plus a signal). That was tried: waybar 0.9.24 ran the
+sixteen commands one after another, the bar went through four states over
+0.4 s on a project switch, and the author saw it as stutter.
 
 Careful when testing by hand:
 
@@ -83,8 +87,8 @@ Careful when testing by hand:
   `swaytier.css`.
 - Earlier copies are next to them as `*.pre-swaytier` and `*.pre-click`.
 - State: `$XDG_RUNTIME_DIR/swaytier/<sway socket name>.json`, with a `.lock`
-  that commands hold (released while a menu is open) and a `.bar` that
-  picks the signalling bar process.
+  that commands hold (released while a menu is open), a `.bar` that picks
+  the bar process that writes, and a `.slots` directory.
 
 ## Open questions and ideas
 

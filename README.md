@@ -81,18 +81,19 @@ and at the top of `style.css`:
 
     @import "swaytier.css";
 
-Then restart waybar; a reload with `SIGUSR2` is not enough (seen with
-waybar 0.9.24: the workspace modules stay hidden until a restart).
+Then restart waybar.
 
 Click a workspace or a project to go there. Clicking the active project's
 name opens the project menu, right-clicking it the window menu.
 
 The bar is one module per workspace and project, because waybar cannot
-tell where in a module a click landed. Only the first one keeps running;
-it sends waybar `SIGRTMIN+8` on every change and waybar runs the others
-again. There are slots for workspaces 1–10 and six other projects; add
-more in `swaytier.json`. The colours are Catppuccin Mocha; override them in
-your own `style.css`.
+tell where in a module a click landed. `swaytier bar` writes each one's
+line to a small file in `$XDG_RUNTIME_DIR/swaytier`, and every other module
+is a `tail` following its file, so nothing is started when you switch and
+the whole bar changes at once. There are modules for workspaces 1–10 and
+six other projects; up to ten projects work if you add them in
+`swaytier.json`. The colours are Catppuccin Mocha; override them in your
+own `style.css`.
 
 ### Uninstall
 
@@ -110,5 +111,6 @@ Workspaces keep their `project:number` names until they are closed.
 - Menus use `wofi`. Set `SWAYTIER_MENU` to any dmenu-compatible command to
   replace it; the prompt is passed in `$SWAYTIER_PROMPT`.
 - No daemon. Each key press is one short-lived process (about 3 ms) talking
-  to the sway socket directly. Only `swaytier bar` stays running.
+  to the sway socket directly. Only `swaytier bar` stays running, with a
+  `tail` per bar module.
 - `swaytier help` lists all commands.
