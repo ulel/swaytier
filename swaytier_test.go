@@ -144,8 +144,8 @@ func TestBarModules(t *testing.T) {
 		{"ws", 1, "1 a<b|focused"},
 		{"ws", 2, "2|visible"},
 		{"ws", 3, "|"},
-		{"other", 1, "home ▸ 10 comms|urgent"},
-		{"other", 2, "crmx|"},
+		{"other", 1, "crmx|"},
+		{"other", 2, "home ▸ 10 comms|urgent"},
 		{"other", 3, "|"},
 	} {
 		if got := slot(c.kind, c.n); got != c.want {

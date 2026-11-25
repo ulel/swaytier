@@ -36,7 +36,7 @@ Bindings live in `sway/swaytier.conf`.
 - Workspaces created outside swaytier (startup, a new output) are renamed
   into the active project.
 - The bar shows the active project and its workspaces, then other projects
-  dimmed. A project on another output is shown as `home ▸ 10 comms`. All of
+  dimmed, in alphabetical order so each keeps its place. A project on another output is shown as `home ▸ 10 comms`. All of
   them can be clicked.
 
 ## Install

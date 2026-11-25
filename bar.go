@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"syscall"
@@ -221,7 +222,8 @@ func wsSlot(st *state, wss []workspace, num int) (text, class string) {
 }
 
 // others lists the projects shown after the active one, in the order of
-// their slots.
+// their slots. That is by name, so that a project keeps its place and can
+// be found and clicked without looking for it.
 func others(st *state, wss []workspace) []string {
 	var out []string
 	for _, p := range projectOrder(st, wss) {
@@ -229,6 +231,7 @@ func others(st *state, wss []workspace) []string {
 			out = append(out, p)
 		}
 	}
+	sort.Strings(out)
 	return out
 }
 
