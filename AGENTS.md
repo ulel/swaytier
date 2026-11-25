@@ -94,6 +94,11 @@ Careful when testing by hand:
 
 - Whether the `home` project is the right way to handle shared windows
   (Slack, mail, chat). The author is undecided.
+- `swaytier start`: open the author's usual windows after a reboot. A file
+  `~/.config/swaytier/start` with lines `project:number  command`; for each,
+  run the command, wait for the new window over IPC and move it there by
+  con_id; skip lines whose workspace already has that program. Designed
+  with the author on 2026-11-25, not built.
 - Opening a terminal in the project's directory (needs a project to
   directory mapping).
 - Bar colours are in `waybar/swaytier.css` (Catppuccin Mocha, the same
