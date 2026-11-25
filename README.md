@@ -38,14 +38,36 @@ Bindings live in `sway/swaytier.conf`.
 
 ## Install
 
+You need sway, Go 1.22 or later to build, and `wofi` for the menus (or
+another dmenu-compatible launcher, see Notes). waybar is optional.
+
+    git clone https://github.com/ulel/swaytier
+    cd swaytier
     make install
 
-This builds the binary into `~/.local/bin` and links the bindings into
-`~/.config/sway`. Then add to the sway config, after `$mod` is set:
+This builds the binary into `~/.local/bin` and links
+`~/.config/sway/swaytier.conf` to `sway/swaytier.conf` in the clone, so keep
+the clone around. `PREFIX` and `SWAY_DIR` change the two places.
+
+Add to the sway config, after `$mod` is set:
 
     include ~/.config/sway/swaytier.conf
 
-and to waybar, with `custom/swaytier` in place of `sway/workspaces`:
+Remove your own bindings for the keys in the table above, in particular the
+stock `workspace number N` and `move container to workspace number N` lines.
+Then reload sway. Workspaces that are already open are renamed into the
+`home` project the next time sway starts, or straight away with
+`swaytier adopt`.
+
+### Other keys
+
+The keys are ordinary `bindsym` lines that run `swaytier <command>`, and
+nothing else knows about them. To change one, edit `sway/swaytier.conf`, or
+skip the include and put your own lines in the sway config.
+
+### waybar
+
+Use `custom/swaytier` in place of `sway/workspaces`:
 
     "custom/swaytier": {
       "exec": "~/.local/bin/swaytier bar",
@@ -54,6 +76,15 @@ and to waybar, with `custom/swaytier` in place of `sway/workspaces`:
       "on-click": "~/.local/bin/swaytier project",
       "on-click-right": "~/.local/bin/swaytier menu"
     }
+
+The colours are Catppuccin Mocha and are set at the top of `bar.go`.
+
+### Uninstall
+
+Remove the include and the waybar module, then delete
+`~/.local/bin/swaytier`, `~/.config/sway/swaytier.conf` and
+`~/.local/state/swaytier`. Workspaces keep their `project:number` names
+until they are closed.
 
 ## Notes
 
