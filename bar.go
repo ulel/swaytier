@@ -3,21 +3,53 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"html"
 	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
+	"syscall"
 )
 
-// Catppuccin Mocha, matching the waybar and kitty themes.
+// The bar is made of several waybar modules so that each workspace and
+// project can be clicked: one that runs all the time and shows the active
+// project, and one per slot that waybar runs again whenever it gets
+// barSignal.
 const (
-	colProject = "#b4befe" // lavender
-	colFocused = "#cba6f7" // mauve
-	colUrgent  = "#f38ba8" // red
-	colOnFill  = "#11111b" // crust, text on a filled cell
+	barSignal = 8  // SIGRTMIN+8, the "signal" of the slot modules
+	sigrtmin  = 34 // glibc's SIGRTMIN, which is what waybar counts from
 )
 
-// bar prints one waybar JSON line whenever workspaces or projects change.
-func bar() error {
+func bar(args []string) error {
+	if len(args) == 0 {
+		return barProject()
+	}
+	if len(args) == 2 && (args[0] == "ws" || args[0] == "other") {
+		if n, err := strconv.Atoi(args[1]); err == nil && n > 0 {
+			return barSlot(args[0], n)
+		}
+	}
+	return errors.New("usage: swaytier bar [ws N | other N]")
+}
+
+// view is what the bar shows: the state as the next command will see it.
+// It is not saved: several bars run at once and must not write the file.
+func view(c *conn) (*state, []workspace, error) {
+	wss, err := c.workspaces()
+	if err != nil {
+		return nil, nil, err
+	}
+	st := loadState()
+	st.follow(wss)
+	st.prune(wss)
+	return st, wss, nil
+}
+
+// barProject prints the active project whenever it changes, and tells
+// waybar to redraw the slots whenever workspaces or projects change.
+func barProject() error {
 	events, err := dial()
 	if err != nil {
 		return err
@@ -48,23 +80,28 @@ func bar() error {
 
 	out := bufio.NewWriter(os.Stdout)
 	last := ""
+	first := barLock()
+	parent := os.Getppid()
 	for {
-		wss, err := query.workspaces()
+		if os.Getppid() != parent {
+			return nil // waybar is gone
+		}
+		st, wss, err := view(query)
 		if err != nil {
 			return err
 		}
-		st := loadState()
-		st.follow(wss) // not saved: the next command does that
-		st.prune(wss)
 		// Workspaces created outside swaytier (new output, startup) join
-		// the active project; the rename triggers the next render.
+		// the active project; the rename triggers the next round.
 		query.run(adoptCmds(st, wss)...)
-		if line := barLine(st, wss); line != last {
+		if line := projectModule(st, wss); line != last {
 			out.WriteString(line + "\n")
 			if err := out.Flush(); err != nil {
 				return err
 			}
 			last = line
+		}
+		if first() {
+			signalWaybar()
 		}
 		select {
 		case <-wake:
@@ -74,61 +111,123 @@ func bar() error {
 	}
 }
 
-func barLine(st *state, wss []workspace) string {
-	var text, tip strings.Builder
-	class := ""
-	text.WriteString(`<span foreground="` + colProject + `"><b>` + html.EscapeString(st.Active) + `</b></span> `)
-	for _, w := range sorted(byNum(wss, st.Active)) {
-		text.WriteString(cell(w))
+// barLock picks one of the bar processes (there is one per output) to do
+// the signalling, so that the slots are redrawn once per change. The
+// returned function reports whether this process is the one.
+func barLock() func() bool {
+	dir := os.Getenv("XDG_RUNTIME_DIR")
+	if dir == "" {
+		dir = os.TempDir()
 	}
+	f, err := os.OpenFile(filepath.Join(dir, "swaytier-bar.lock"), os.O_CREATE|os.O_RDWR, 0o600)
+	if err != nil {
+		return func() bool { return true }
+	}
+	held := false
+	return func() bool {
+		// Tried again every time: the holder may have gone away.
+		held = held || syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB) == nil
+		return held
+	}
+}
+
+func signalWaybar() {
+	comms, _ := filepath.Glob("/proc/[0-9]*/comm")
+	for _, comm := range comms {
+		if name, err := os.ReadFile(comm); err == nil && strings.TrimSpace(string(name)) == "waybar" {
+			pid, _ := strconv.Atoi(filepath.Base(filepath.Dir(comm)))
+			syscall.Kill(pid, syscall.Signal(sigrtmin+barSignal))
+		}
+	}
+}
+
+// barSlot prints one slot once: workspace n of the active project, or the
+// n-th other project. An empty text makes waybar hide the module.
+func barSlot(kind string, n int) error {
+	c, err := dial()
+	if err != nil {
+		return err
+	}
+	st, wss, err := view(c)
+	if err != nil {
+		return err
+	}
+	text, class := otherSlot(st, wss, n)
+	if kind == "ws" {
+		text, class = wsSlot(st, wss, n)
+	}
+	fmt.Println(module(text, "", class))
+	return nil
+}
+
+func module(text, tooltip, class string) string {
+	var b strings.Builder
+	enc := json.NewEncoder(&b)
+	enc.SetEscapeHTML(false)
+	enc.Encode(map[string]string{"text": html.EscapeString(text), "tooltip": html.EscapeString(tooltip), "class": class})
+	return strings.TrimSpace(b.String())
+}
+
+func projectModule(st *state, wss []workspace) string {
+	var tip []string
 	for _, p := range projectOrder(st, wss) {
-		list := sorted(byNum(wss, p))
-		tip.WriteString(html.EscapeString(projectLine(wss, p)) + "\n")
-		if p == st.Active || len(list) == 0 {
-			continue
-		}
-		// Other projects are dimmed, except one that is on another output:
-		// that shows which of its workspaces is on screen.
-		label, attr := html.EscapeString(p), ` alpha="60%"`
-		for _, w := range list {
-			if w.Visible {
-				n, _ := parseName(w.Name)
-				label, attr = html.EscapeString(p+" ▸ "+n.Short()), ` underline="single"`
-			}
-		}
-		for _, w := range list {
-			if w.Urgent {
-				attr = ` foreground="` + colUrgent + `"`
-			}
-		}
-		text.WriteString(`  <span` + attr + `>` + label + `</span>`)
+		tip = append(tip, projectLine(wss, p))
 	}
+	class := ""
 	for _, w := range wss {
 		if w.Urgent {
 			class = "urgent"
 		}
 	}
-	var b strings.Builder
-	enc := json.NewEncoder(&b)
-	enc.SetEscapeHTML(false)
-	enc.Encode(map[string]string{
-		"text":    text.String(),
-		"tooltip": strings.TrimSpace(tip.String()),
-		"class":   class,
-	})
-	return strings.TrimSpace(b.String())
+	return module(st.Active, strings.Join(tip, "\n"), class)
 }
 
-func cell(w workspace) string {
+func wsSlot(st *state, wss []workspace, num int) (text, class string) {
+	w, ok := byNum(wss, st.Active)[num]
+	if !ok {
+		return "", ""
+	}
 	n, _ := parseName(w.Name)
-	body := " " + html.EscapeString(n.Short()) + " "
 	switch {
 	case w.Focused:
-		return `<span background="` + colFocused + `" foreground="` + colOnFill + `"><b>` + body + `</b></span>`
+		class = "focused"
 	case w.Urgent:
-		return `<span background="` + colUrgent + `" foreground="` + colOnFill + `">` + body + `</span>`
+		class = "urgent"
 	case w.Visible:
-		return `<span underline="single">` + body + `</span>`
+		class = "visible"
 	}
-	return body
+	return n.Short(), class
+}
+
+// others lists the projects shown after the active one, in the order of
+// their slots.
+func others(st *state, wss []workspace) []string {
+	var out []string
+	for _, p := range projectOrder(st, wss) {
+		if p != st.Active && len(byNum(wss, p)) > 0 {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
+// otherSlot is the n-th other project. One that is on another output
+// shows which of its workspaces is on screen there.
+func otherSlot(st *state, wss []workspace, n int) (text, class string) {
+	list := others(st, wss)
+	if n > len(list) {
+		return "", ""
+	}
+	text = list[n-1]
+	for _, w := range sorted(byNum(wss, text)) {
+		if name, _ := parseName(w.Name); w.Visible && class == "" {
+			text, class = text+" ▸ "+name.Short(), "visible"
+		}
+	}
+	for _, w := range byNum(wss, list[n-1]) {
+		if w.Urgent {
+			class = "urgent"
+		}
+	}
+	return text, class
 }

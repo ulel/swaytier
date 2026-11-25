@@ -24,7 +24,10 @@ const usage = `usage: swaytier <command>
   adopt           pull plain workspaces into the active project
   forget NAME     remove a project from the list
   status          print projects and workspaces
-  bar             stream waybar JSON
+  other N         switch to the N-th other project in the bar
+  bar             waybar module: the active project, running all the time
+  bar ws N        waybar module: workspace N of the active project, once
+  bar other N     waybar module: the N-th other project, once
 `
 
 func main() {
@@ -37,7 +40,7 @@ func main() {
 	case "help", "-h", "--help":
 		fmt.Print(usage)
 	case "bar":
-		err = bar()
+		err = bar(os.Args[2:])
 	default:
 		var a *app
 		if a, err = newApp(); err == nil {

@@ -23,9 +23,10 @@ wofi returns when you type text that matches nothing.
 | `state.go` | State file, plus the pure `snapshot` / `landing` / `restore` logic |
 | `names.go` | Parsing and cleaning of `project:number[:label]` names |
 | `ipc.go` | Sway IPC over the unix socket, window tree walk |
-| `bar.go` | `swaytier bar`, the long-running waybar module |
+| `bar.go` | The waybar modules: `bar` (runs all the time), `bar ws N` and `bar other N` (run once per change) |
 | `menu.go` | wofi / `SWAYTIER_MENU` invocation |
 | `sway/swaytier.conf` | Key bindings, symlinked into `~/.config/sway` |
+| `waybar/swaytier.json`, `.css` | Module definitions and style, symlinked into `~/.config/waybar` |
 
 ## Design decisions to keep
 
@@ -56,7 +57,15 @@ wofi returns when you type text that matches nothing.
 After changing `sway/swaytier.conf` run `swaymsg reload`; that also restarts
 waybar and therefore `swaytier bar`. After changing only Go code,
 `make install` is enough for key bindings; restart the bar with
-`pkill -f 'swaytier bar'` (waybar restarts it after a second).
+`pkill -x swaytier` (waybar restarts it after a second).
+
+The bar is one waybar module per workspace and project so that each can be
+clicked. `swaytier bar` sends waybar SIGRTMIN+8 on every change, and waybar
+then runs the slot modules again. With several outputs there are several
+`swaytier bar` processes; a lock file in `$XDG_RUNTIME_DIR` picks the one
+that signals. After changing the waybar files restart waybar
+(`swaymsg reload`); with waybar 0.9.24 a `SIGUSR2` reload leaves the slot
+modules hidden.
 
 Careful when testing by hand:
 
@@ -69,9 +78,10 @@ Careful when testing by hand:
 ## Outside this repository
 
 - `~/.config/sway/config` includes `~/.config/sway/swaytier.conf`.
-- `~/.config/waybar/config` has the `custom/swaytier` module in place of
-  `sway/workspaces`; `style.css` has a `#custom-swaytier` rule.
-- Pre-install copies are next to them as `*.pre-swaytier`.
+- `~/.config/waybar/config` includes `swaytier.json` and has
+  `group/swaytier` in place of `sway/workspaces`; `style.css` imports
+  `swaytier.css`.
+- Earlier copies are next to them as `*.pre-swaytier` and `*.pre-click`.
 - State: `~/.local/state/swaytier/state.json`.
 
 ## Open questions and ideas
@@ -80,9 +90,8 @@ Careful when testing by hand:
   (Slack, mail, chat). The author is undecided.
 - Opening a terminal in the project's directory (needs a project to
   directory mapping).
-- Bar colours are constants in `bar.go` (Catppuccin Mocha, the same palette
-  as `~/.config/waybar/style.css` and the kitty theme).
-- Workspaces in the bar are not individually clickable.
+- Bar colours are in `waybar/swaytier.css` (Catppuccin Mocha, the same
+  palette as `~/.config/waybar/style.css` and the kitty theme).
 - In the wofi project menu, a new name that is a fragment of an existing
   one may select the existing project. `swaytier project NAME` always works.
 

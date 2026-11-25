@@ -1,0 +1,52 @@
+/* swaytier in waybar. Colours are Catppuccin Mocha; override them in your
+   own style.css, after the import. */
+
+#custom-swaytier {
+    padding: 0 6px 0 10px;
+    color: #b4befe;
+    font-weight: bold;
+}
+
+#custom-swaytier.urgent {
+    color: #f38ba8;
+}
+
+#custom-swaytier-ws,
+#custom-swaytier-other {
+    padding: 0 7px;
+    color: #cdd6f4;
+}
+
+#custom-swaytier-ws:hover,
+#custom-swaytier-other:hover {
+    background-color: #313244;
+}
+
+#custom-swaytier-ws.visible,
+#custom-swaytier-other.visible {
+    text-decoration: underline;
+}
+
+#custom-swaytier-ws.focused {
+    background-color: #cba6f7;
+    color: #11111b;
+    font-weight: bold;
+}
+
+#custom-swaytier-ws.urgent {
+    background-color: #f38ba8;
+    color: #11111b;
+}
+
+/* Other projects are dimmed unless they are on screen or want attention. */
+#custom-swaytier-other {
+    color: alpha(#cdd6f4, 0.6);
+}
+
+#custom-swaytier-other.visible {
+    color: #cdd6f4;
+}
+
+#custom-swaytier-other.urgent {
+    color: #f38ba8;
+}

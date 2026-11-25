@@ -114,15 +114,42 @@ func TestAdoptCmds(t *testing.T) {
 	}
 }
 
-func TestBarLine(t *testing.T) {
-	st := &state{Active: "lumen", Recent: []string{"lumen", "home"}}
-	line := barLine(st, []workspace{
+func TestBarModules(t *testing.T) {
+	st := &state{Active: "lumen", Recent: []string{"lumen", "home", "crmx"}}
+	wss := []workspace{
 		{Name: "lumen:1:a<b", Focused: true, Visible: true},
-		{Name: "home:10", Urgent: true},
-	})
-	for _, want := range []string{`lumen`, `1 a&lt;b`, `home`, colUrgent, `"class":"urgent"`} {
+		{Name: "lumen:2", Visible: true},
+		{Name: "home:10:comms", Visible: true},
+		{Name: "home:3", Urgent: true},
+		{Name: "crmx:1"},
+	}
+	line := projectModule(st, wss)
+	for _, want := range []string{`"text":"lumen"`, `"class":"urgent"`, `1 a&lt;b`} {
 		if !strings.Contains(line, want) {
-			t.Errorf("bar line misses %q: %s", want, line)
+			t.Errorf("project module misses %q: %s", want, line)
+		}
+	}
+	slot := func(kind string, n int) string {
+		text, class := otherSlot(st, wss, n)
+		if kind == "ws" {
+			text, class = wsSlot(st, wss, n)
+		}
+		return text + "|" + class
+	}
+	for _, c := range []struct {
+		kind string
+		n    int
+		want string
+	}{
+		{"ws", 1, "1 a<b|focused"},
+		{"ws", 2, "2|visible"},
+		{"ws", 3, "|"},
+		{"other", 1, "home ▸ 10 comms|urgent"},
+		{"other", 2, "crmx|"},
+		{"other", 3, "|"},
+	} {
+		if got := slot(c.kind, c.n); got != c.want {
+			t.Errorf("%s slot %d = %q, want %q", c.kind, c.n, got, c.want)
 		}
 	}
 }

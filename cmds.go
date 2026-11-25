@@ -59,6 +59,12 @@ func (a *app) dispatch(cmd string, args []string) error {
 		if p != "" {
 			return a.switchTo(p)
 		}
+	case "other":
+		// The n-th project after the active one in the bar.
+		n, _ := strconv.Atoi(strings.Join(args, ""))
+		if list := others(a.st, a.wss); n >= 1 && n <= len(list) {
+			return a.switchTo(list[n-1])
+		}
 	case "send":
 		if p, ok := a.pickProject("send window to", args); ok {
 			a.st.know(p)

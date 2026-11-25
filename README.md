@@ -34,7 +34,8 @@ Bindings live in `sway/swaytier.conf`.
 - Workspaces created outside swaytier (startup, a new output) are renamed
   into the active project.
 - The bar shows the active project and its workspaces, then other projects
-  dimmed. A project on another output is shown as `home ▸ 10 comms`.
+  dimmed. A project on another output is shown as `home ▸ 10 comms`. All of
+  them can be clicked.
 
 ## Install
 
@@ -67,22 +68,36 @@ skip the include and put your own lines in the sway config.
 
 ### waybar
 
-Use `custom/swaytier` in place of `sway/workspaces`:
+`make install` also links `swaytier.json` and `swaytier.css` into
+`~/.config/waybar`. In the waybar config, include the modules and put the
+group where `sway/workspaces` was:
 
-    "custom/swaytier": {
-      "exec": "~/.local/bin/swaytier bar",
-      "return-type": "json",
-      "restart-interval": 1,
-      "on-click": "~/.local/bin/swaytier project",
-      "on-click-right": "~/.local/bin/swaytier menu"
-    }
+    "include": ["~/.config/waybar/swaytier.json"],
+    "modules-left": ["group/swaytier"],
 
-The colours are Catppuccin Mocha and are set at the top of `bar.go`.
+and at the top of `style.css`:
+
+    @import "swaytier.css";
+
+Then restart waybar; a reload with `SIGUSR2` is not enough (seen with
+waybar 0.9.24: the workspace modules stay hidden until a restart).
+
+Click a workspace or a project to go there. Clicking the active project's
+name opens the project menu, right-clicking it the window menu.
+
+The bar is one module per workspace and project, because waybar cannot
+tell where in a module a click landed. Only the first one keeps running;
+it sends waybar `SIGRTMIN+8` on every change and waybar runs the others
+again. There are slots for workspaces 1–10 and six other projects; add
+more in `swaytier.json`. The colours are Catppuccin Mocha; override them in
+your own `style.css`.
 
 ### Uninstall
 
-Remove the include and the waybar module, then delete
-`~/.local/bin/swaytier`, `~/.config/sway/swaytier.conf` and
+Remove the include from sway and the include, group and import from
+waybar, then delete
+`~/.local/bin/swaytier`, `~/.config/sway/swaytier.conf`,
+`~/.config/waybar/swaytier.json`, `~/.config/waybar/swaytier.css` and
 `~/.local/state/swaytier`. Workspaces keep their `project:number` names
 until they are closed.
 

@@ -1,0 +1,159 @@
+{
+  "group/swaytier": {
+    "orientation": "horizontal",
+    "modules": [
+      "custom/swaytier",
+      "custom/swaytier-ws#1",
+      "custom/swaytier-ws#2",
+      "custom/swaytier-ws#3",
+      "custom/swaytier-ws#4",
+      "custom/swaytier-ws#5",
+      "custom/swaytier-ws#6",
+      "custom/swaytier-ws#7",
+      "custom/swaytier-ws#8",
+      "custom/swaytier-ws#9",
+      "custom/swaytier-ws#10",
+      "custom/swaytier-other#1",
+      "custom/swaytier-other#2",
+      "custom/swaytier-other#3",
+      "custom/swaytier-other#4",
+      "custom/swaytier-other#5",
+      "custom/swaytier-other#6"
+    ]
+  },
+  "custom/swaytier": {
+    "exec": "~/.local/bin/swaytier bar",
+    "return-type": "json",
+    "restart-interval": 1,
+    "on-click": "~/.local/bin/swaytier project",
+    "on-click-right": "~/.local/bin/swaytier menu"
+  },
+  "custom/swaytier-ws#1": {
+    "exec": "~/.local/bin/swaytier bar ws 1",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 8,
+    "tooltip": false,
+    "on-click": "~/.local/bin/swaytier ws 1"
+  },
+  "custom/swaytier-ws#2": {
+    "exec": "~/.local/bin/swaytier bar ws 2",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 8,
+    "tooltip": false,
+    "on-click": "~/.local/bin/swaytier ws 2"
+  },
+  "custom/swaytier-ws#3": {
+    "exec": "~/.local/bin/swaytier bar ws 3",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 8,
+    "tooltip": false,
+    "on-click": "~/.local/bin/swaytier ws 3"
+  },
+  "custom/swaytier-ws#4": {
+    "exec": "~/.local/bin/swaytier bar ws 4",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 8,
+    "tooltip": false,
+    "on-click": "~/.local/bin/swaytier ws 4"
+  },
+  "custom/swaytier-ws#5": {
+    "exec": "~/.local/bin/swaytier bar ws 5",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 8,
+    "tooltip": false,
+    "on-click": "~/.local/bin/swaytier ws 5"
+  },
+  "custom/swaytier-ws#6": {
+    "exec": "~/.local/bin/swaytier bar ws 6",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 8,
+    "tooltip": false,
+    "on-click": "~/.local/bin/swaytier ws 6"
+  },
+  "custom/swaytier-ws#7": {
+    "exec": "~/.local/bin/swaytier bar ws 7",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 8,
+    "tooltip": false,
+    "on-click": "~/.local/bin/swaytier ws 7"
+  },
+  "custom/swaytier-ws#8": {
+    "exec": "~/.local/bin/swaytier bar ws 8",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 8,
+    "tooltip": false,
+    "on-click": "~/.local/bin/swaytier ws 8"
+  },
+  "custom/swaytier-ws#9": {
+    "exec": "~/.local/bin/swaytier bar ws 9",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 8,
+    "tooltip": false,
+    "on-click": "~/.local/bin/swaytier ws 9"
+  },
+  "custom/swaytier-ws#10": {
+    "exec": "~/.local/bin/swaytier bar ws 10",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 8,
+    "tooltip": false,
+    "on-click": "~/.local/bin/swaytier ws 10"
+  },
+  "custom/swaytier-other#1": {
+    "exec": "~/.local/bin/swaytier bar other 1",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 8,
+    "tooltip": false,
+    "on-click": "~/.local/bin/swaytier other 1"
+  },
+  "custom/swaytier-other#2": {
+    "exec": "~/.local/bin/swaytier bar other 2",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 8,
+    "tooltip": false,
+    "on-click": "~/.local/bin/swaytier other 2"
+  },
+  "custom/swaytier-other#3": {
+    "exec": "~/.local/bin/swaytier bar other 3",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 8,
+    "tooltip": false,
+    "on-click": "~/.local/bin/swaytier other 3"
+  },
+  "custom/swaytier-other#4": {
+    "exec": "~/.local/bin/swaytier bar other 4",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 8,
+    "tooltip": false,
+    "on-click": "~/.local/bin/swaytier other 4"
+  },
+  "custom/swaytier-other#5": {
+    "exec": "~/.local/bin/swaytier bar other 5",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 8,
+    "tooltip": false,
+    "on-click": "~/.local/bin/swaytier other 5"
+  },
+  "custom/swaytier-other#6": {
+    "exec": "~/.local/bin/swaytier bar other 6",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 8,
+    "tooltip": false,
+    "on-click": "~/.local/bin/swaytier other 6"
+  }
+}
