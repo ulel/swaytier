@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"errors"
 	"fmt"
+	"os"
 	"slices"
 	"sort"
 	"strconv"
@@ -11,9 +12,10 @@ import (
 )
 
 type app struct {
-	c   *conn
-	st  *state
-	wss []workspace
+	c    *conn
+	st   *state
+	wss  []workspace
+	lock *os.File // held while the state may be read and written
 }
 
 func newApp() (*app, error) {
@@ -21,16 +23,38 @@ func newApp() (*app, error) {
 	if err != nil {
 		return nil, err
 	}
-	wss, err := c.workspaces()
+	a := &app{c: c}
+	return a, a.load()
+}
+
+// load takes the lock and reads the workspaces and the state.
+func (a *app) load() error {
+	a.lock = lockState()
+	wss, err := a.c.workspaces()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	st := loadState()
-	if st.follow(wss) {
-		st.save() // so toggle knows where we came from
+	moved := st.follow(wss)
+	if st.track(wss) || moved {
+		st.save() // so toggle and back know where we came from
 	}
 	st.prune(wss)
-	return &app{c, st, wss}, nil
+	a.st, a.wss = st, wss
+	return nil
+}
+
+// away runs a menu without holding the lock, so that the keys keep working
+// while it is open, and then catches up with what happened meanwhile.
+func (a *app) away(menu func() (string, bool)) (string, bool) {
+	if a.lock != nil {
+		a.lock.Close()
+	}
+	sel, ok := menu()
+	if err := a.load(); err != nil {
+		return "", false
+	}
+	return sel, ok
 }
 
 func (a *app) dispatch(cmd string, args []string) error {
@@ -58,6 +82,15 @@ func (a *app) dispatch(cmd string, args []string) error {
 		}
 		if p != "" {
 			return a.switchTo(p)
+		}
+	case "back":
+		p := a.st.project(a.st.Active)
+		if w, ok := byNum(a.wss, a.st.Active)[p.Prev]; ok {
+			return a.c.run("workspace " + quote(w.Name))
+		}
+	case "next", "prev":
+		if ws := neighbour(a.wss, a.st.Active, cmd == "next"); ws != "" {
+			return a.c.run("workspace " + quote(ws))
 		}
 	case "other":
 		// The n-th project after the active one in the bar.
@@ -199,7 +232,7 @@ func (a *app) label(args []string) error {
 	text := strings.Join(args, " ")
 	if len(args) == 0 {
 		prompt := fmt.Sprintf("label for %s %d (- clears)", n.Project, n.Num)
-		if text, ok = input(prompt); !ok {
+		if text, ok = a.away(func() (string, bool) { return input(prompt) }); !ok {
 			return nil
 		}
 		if text == "-" {
@@ -250,7 +283,7 @@ func (a *app) menu() error {
 			add(p+" "+n.Short()+sep+"workspace", action{p, w.Name, "workspace " + quote(w.Name)})
 		}
 	}
-	sel, ok := pick("go to", lines)
+	sel, ok := a.away(func() (string, bool) { return pick("go to", lines) })
 	if !ok {
 		return nil
 	}
@@ -273,7 +306,7 @@ func (a *app) pickProject(prompt string, args []string) (string, bool) {
 		}
 	}
 	lines = append(lines, projectLine(a.wss, a.st.Active))
-	sel, ok := pick(prompt, lines)
+	sel, ok := a.away(func() (string, bool) { return pick(prompt, lines) })
 	if !ok {
 		return "", false
 	}

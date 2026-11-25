@@ -115,11 +115,9 @@ func barProject() error {
 // the signalling, so that the slots are redrawn once per change. The
 // returned function reports whether this process is the one.
 func barLock() func() bool {
-	dir := os.Getenv("XDG_RUNTIME_DIR")
-	if dir == "" {
-		dir = os.TempDir()
-	}
-	f, err := os.OpenFile(filepath.Join(dir, "swaytier-bar.lock"), os.O_CREATE|os.O_RDWR, 0o600)
+	path := statePath()
+	os.MkdirAll(filepath.Dir(path), 0o755)
+	f, err := os.OpenFile(path+".bar", os.O_CREATE|os.O_RDWR, 0o600)
 	if err != nil {
 		return func() bool { return true }
 	}

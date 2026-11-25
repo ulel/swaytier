@@ -82,7 +82,9 @@ Careful when testing by hand:
   `group/swaytier` in place of `sway/workspaces`; `style.css` imports
   `swaytier.css`.
 - Earlier copies are next to them as `*.pre-swaytier` and `*.pre-click`.
-- State: `~/.local/state/swaytier/state.json`.
+- State: `$XDG_RUNTIME_DIR/swaytier/<sway socket name>.json`, with a `.lock`
+  that commands hold (released while a menu is open) and a `.bar` that
+  picks the signalling bar process.
 
 ## Open questions and ideas
 

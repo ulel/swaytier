@@ -225,3 +225,35 @@ func TestPreviousPassesOverHome(t *testing.T) {
 		t.Errorf("previous with nothing else = %q", got)
 	}
 }
+
+func TestTrackAndNeighbour(t *testing.T) {
+	st := &state{Active: "lumen", Projects: map[string]*project{}}
+	at := func(n int) []workspace {
+		wss := []workspace{{Name: "lumen:1"}, {Name: "lumen:3"}, {Name: "lumen:7"}, {Name: "home:2"}}
+		for i := range wss {
+			if name, _ := parseName(wss[i].Name); name.Project == "lumen" && name.Num == n {
+				wss[i].Focused = true
+			}
+		}
+		return wss
+	}
+	st.track(at(1))
+	if !st.track(at(7)) || st.track(at(7)) {
+		t.Error("track should report a change once")
+	}
+	if p := st.Projects["lumen"]; p.Last != 7 || p.Prev != 1 {
+		t.Errorf("after 1 then 7: %+v", p)
+	}
+	for _, c := range []struct {
+		from    int
+		forward bool
+		want    string
+	}{{1, true, "lumen:3"}, {7, true, "lumen:1"}, {1, false, "lumen:7"}, {3, false, "lumen:1"}} {
+		if got := neighbour(at(c.from), "lumen", c.forward); got != c.want {
+			t.Errorf("neighbour from %d forward=%v = %q, want %q", c.from, c.forward, got, c.want)
+		}
+	}
+	if got := neighbour([]workspace{{Name: "lumen:1", Focused: true}}, "lumen", true); got != "" {
+		t.Errorf("neighbour with one workspace = %q", got)
+	}
+}

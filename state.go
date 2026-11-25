@@ -6,11 +6,14 @@ import (
 	"path/filepath"
 	"slices"
 	"sort"
+	"strings"
+	"syscall"
 )
 
 // project remembers how a project looked when it was last left.
 type project struct {
 	Last    int   `json:"last"`              // workspace that had focus
+	Prev    int   `json:"prev,omitempty"`    // the one that had it before, for back
 	Visible []int `json:"visible,omitempty"` // workspaces that were on screen
 }
 
@@ -20,12 +23,37 @@ type state struct {
 	Projects map[string]*project `json:"projects"`
 }
 
+// statePath is one file per sway session. It lives in the runtime
+// directory because nothing in it outlasts the session: the workspaces it
+// describes are gone after a restart.
 func statePath() string {
+	if dir := os.Getenv("XDG_RUNTIME_DIR"); dir != "" {
+		name := strings.TrimSuffix(filepath.Base(os.Getenv("SWAYSOCK")), ".sock")
+		if name == "" || name == "." {
+			name = "state"
+		}
+		return filepath.Join(dir, "swaytier", name+".json")
+	}
 	dir := os.Getenv("XDG_STATE_HOME")
 	if dir == "" {
 		dir = filepath.Join(os.Getenv("HOME"), ".local", "state")
 	}
 	return filepath.Join(dir, "swaytier", "state.json")
+}
+
+// lockState waits until no other swaytier command is working on the state
+// file, so that two quick key presses cannot lose each other's changes.
+// Closing the file, or exiting, lets the next one in. The bars only read
+// and do not take it.
+func lockState() *os.File {
+	path := statePath()
+	os.MkdirAll(filepath.Dir(path), 0o755)
+	f, err := os.OpenFile(path+".lock", os.O_CREATE|os.O_RDWR, 0o600)
+	if err != nil {
+		return nil // better unlocked than stuck
+	}
+	syscall.Flock(int(f.Fd()), syscall.LOCK_EX)
+	return f
 }
 
 func loadState() *state {
@@ -108,6 +136,36 @@ func (s *state) follow(wss []workspace) bool {
 		}
 	}
 	return false
+}
+
+// track notes which workspace of the active project has the focus and
+// which had it before, for back. It catches up at the start of every
+// command, so it also sees focus changes made without swaytier. It reports
+// whether anything changed.
+func (s *state) track(wss []workspace) bool {
+	for n, w := range byNum(wss, s.Active) {
+		if p := s.project(s.Active); w.Focused && n != p.Last {
+			p.Prev, p.Last = p.Last, n
+			return true
+		}
+	}
+	return false
+}
+
+// neighbour is the next or previous workspace of a project by number,
+// wrapping around. It is empty when there is nowhere else to go.
+func neighbour(wss []workspace, proj string, forward bool) string {
+	list := sorted(byNum(wss, proj))
+	for i, w := range list {
+		if w.Focused && len(list) > 1 {
+			step := len(list) - 1
+			if forward {
+				step = 1
+			}
+			return list[(i+step)%len(list)].Name
+		}
+	}
+	return ""
 }
 
 // prune forgets projects that have no workspaces left, so they drop out of

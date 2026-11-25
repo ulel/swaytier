@@ -13,6 +13,8 @@ const usage = `usage: swaytier <command>
 
   ws N            focus workspace N of the active project
   move N          move the focused window to workspace N
+  back            focus the previous workspace of the active project
+  next, prev      focus the next or previous workspace by number
   project [NAME]  switch project (menu if no name; a new name creates it)
   toggle          switch to the previous project, passing over home
   home            switch to the home project, or back again

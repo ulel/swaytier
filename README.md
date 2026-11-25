@@ -12,6 +12,8 @@ it, and the label is only there for reading and searching.
 |---|---|
 | `Mod+1..0` | Workspace 1–10 of the active project |
 | `Mod+Shift+1..0` | Move window to that workspace |
+| `Mod+b` | Back to the previous workspace of the project |
+| `Mod+.` / `Mod+,` | Next / previous workspace of the project |
 | `Mod+p` | Switch project (type a new name to create one) |
 | `Mod+Tab` | Previous project; home is passed over, so `Mod+m` does not disturb it |
 | `Mod+m` | Home project, or back again |
@@ -97,13 +99,14 @@ your own `style.css`.
 Remove the include from sway and the include, group and import from
 waybar, then delete
 `~/.local/bin/swaytier`, `~/.config/sway/swaytier.conf`,
-`~/.config/waybar/swaytier.json`, `~/.config/waybar/swaytier.css` and
-`~/.local/state/swaytier`. Workspaces keep their `project:number` names
-until they are closed.
+`~/.config/waybar/swaytier.json` and `~/.config/waybar/swaytier.css`.
+Workspaces keep their `project:number` names until they are closed.
 
 ## Notes
 
-- State is kept in `~/.local/state/swaytier/state.json`.
+- State is one small file per sway session in `$XDG_RUNTIME_DIR/swaytier`.
+  It is gone after logging out, like the workspaces it describes, so a new
+  session starts in `home`.
 - Menus use `wofi`. Set `SWAYTIER_MENU` to any dmenu-compatible command to
   replace it; the prompt is passed in `$SWAYTIER_PROMPT`.
 - No daemon. Each key press is one short-lived process (about 3 ms) talking
