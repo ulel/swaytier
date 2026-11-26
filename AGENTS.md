@@ -96,22 +96,8 @@ Careful when testing by hand:
 
 - Whether the `home` project is the right way to handle shared windows
   (Slack, mail, chat). The author is undecided.
-- `swaytier start`: open the author's usual windows after a reboot. A file
-  `~/.config/swaytier/start` with lines `project:number  command`; for each,
-  run the command, wait for the new window over IPC and move it there by
-  con_id; skip lines whose workspace already has that program. Designed
-  with the author on 2026-11-25, not built.
-- Project directory: each project remembers a folder and `Mod+Enter` opens
-  kitty there (needs a project to directory mapping). The author's first
-  pick of the ideas from 2026-11-26.
-- Swap screens: one key that exchanges the two workspaces on screen. Only
-  those two move; the author expects it to stay within the active project.
-- Per-project scratch terminal: a drop-down kitty that belongs to the
-  active project.
-- Pinned apps: rules that keep a program in one project (Slack in `home`).
-  Mail is a browser tab for the author, so matching it is hard, and pinned
-  windows must still be movable by hand.
-- Rename a project (there is `forget` but no rename).
+- Ideas for features are GitHub issues: `gh issue list -R ulel/swaytier`.
+  Add new ones there, not here.
 - Bar colours are in `waybar/swaytier.css` (Catppuccin Mocha, the same
   palette as `~/.config/waybar/style.css` and the kitty theme).
 - In the wofi project menu, a new name that is a fragment of an existing
