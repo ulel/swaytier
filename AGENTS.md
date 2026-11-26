@@ -78,6 +78,8 @@ Careful when testing by hand:
 - Commands act on the author's live session. A safe round trip is
   `swaytier project zz-test`, `swaytier toggle`, `swaytier forget zz-test`.
 - Menus pop up on screen and cannot be driven from a script.
+- Check that the screen is not locked first (`pgrep -x swaylock-plugin`):
+  under the lock nothing has focus and a test proves nothing.
 
 ## Outside this repository
 
@@ -99,8 +101,17 @@ Careful when testing by hand:
   run the command, wait for the new window over IPC and move it there by
   con_id; skip lines whose workspace already has that program. Designed
   with the author on 2026-11-25, not built.
-- Opening a terminal in the project's directory (needs a project to
-  directory mapping).
+- Project directory: each project remembers a folder and `Mod+Enter` opens
+  kitty there (needs a project to directory mapping). The author's first
+  pick of the ideas from 2026-11-26.
+- Swap screens: one key that exchanges the two workspaces on screen. Only
+  those two move; the author expects it to stay within the active project.
+- Per-project scratch terminal: a drop-down kitty that belongs to the
+  active project.
+- Pinned apps: rules that keep a program in one project (Slack in `home`).
+  Mail is a browser tab for the author, so matching it is hard, and pinned
+  windows must still be movable by hand.
+- Rename a project (there is `forget` but no rename).
 - Bar colours are in `waybar/swaytier.css` (Catppuccin Mocha, the same
   palette as `~/.config/waybar/style.css` and the kitty theme).
 - In the wofi project menu, a new name that is a fragment of an existing
