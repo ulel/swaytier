@@ -108,7 +108,11 @@ func (a *app) dispatch(cmd string, args []string) error {
 			return a.assign(p)
 		}
 	case "output":
+		// With "move" the focused window goes there and the focus stays.
 		if out := nextOutput(a.wss); out != "" {
+			if f, ok := a.focused(); ok && len(args) == 1 && args[0] == "move" {
+				return a.c.run("move container to output "+quote(out), "focus output "+quote(f.Output))
+			}
 			return a.c.run("focus output " + quote(out))
 		}
 	case "label":

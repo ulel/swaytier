@@ -18,7 +18,7 @@ const usage = `usage: swaytier <command>
   project [NAME]  switch project (menu if no name; a new name creates it)
   toggle          switch to the previous project, passing over home
   home            switch to the home project, or back again
-  output          focus the next output
+  output [move]   focus the next output, or move the focused window there
   menu            fuzzy menu of all windows and workspaces
   label [TEXT]    name the focused workspace (prompt if no text, "" clears)
   send [NAME]     move the focused window to another project
