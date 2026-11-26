@@ -21,6 +21,8 @@ const usage = `usage: swaytier <command>
   output [move]   focus the next output, or move the focused window there
   menu            fuzzy menu of all windows and workspaces
   label [TEXT]    name the focused workspace (prompt if no text, "" clears)
+  rename [[OLD] NEW]
+                  rename the active project, or OLD (prompt if no name)
   send [NAME]     move the focused window to another project
   assign [NAME]   move the focused workspace to another project
   adopt           pull plain workspaces into the active project

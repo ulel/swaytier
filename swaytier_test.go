@@ -257,3 +257,28 @@ func TestTrackAndNeighbour(t *testing.T) {
 		t.Errorf("neighbour with one workspace = %q", got)
 	}
 }
+
+func TestRename(t *testing.T) {
+	st := &state{Active: "lumen", Recent: []string{"lumen", "crmx", "home"}, Projects: map[string]*project{"lumen": {Last: 2, Prev: 1}}}
+	wss := []workspace{{Name: "lumen:2:bench"}, {Name: "lumen:1"}, {Name: "crmx:1"}, {Name: "home:10"}}
+	for _, bad := range [][2]string{{"lumen", ""}, {"lumen", "crmx"}, {"gone", "new"}} {
+		if cmds, err := st.rename(wss, bad[0], bad[1]); err == nil || cmds != nil {
+			t.Errorf("rename %v gave %v, %v", bad, cmds, err)
+		}
+	}
+	cmds, err := st.rename(wss, "lumen", "lux")
+	want := []string{`rename workspace "lumen:1" to "lux:1"`, `rename workspace "lumen:2:bench" to "lux:2:bench"`}
+	if err != nil || !reflect.DeepEqual(cmds, want) {
+		t.Errorf("rename gave %v, %v", cmds, err)
+	}
+	if st.Active != "lux" || !reflect.DeepEqual(st.Recent, []string{"lux", "crmx", "home"}) {
+		t.Errorf("after rename: %q %v", st.Active, st.Recent)
+	}
+	if p := st.Projects["lux"]; p == nil || p.Last != 2 || p.Prev != 1 || st.Projects["lumen"] != nil {
+		t.Errorf("record did not move: %v", st.Projects)
+	}
+	// Another project than the active one, by name.
+	if cmds, err := st.rename(wss, "crmx", "dmx"); err != nil || len(cmds) != 1 || st.Active != "lux" || st.Recent[1] != "dmx" {
+		t.Errorf("rename of another project gave %v, %v, %v", cmds, err, st.Recent)
+	}
+}

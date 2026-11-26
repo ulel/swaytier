@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"slices"
@@ -122,6 +123,43 @@ func (s *state) previous() string {
 		return homeProject
 	}
 	return ""
+}
+
+// rename gives a project a new name, taking its record and its place in
+// the recent list along, and returns the commands that rename its
+// workspaces. It refuses a name that is already in use: two projects
+// could have the same workspace numbers.
+func (s *state) rename(wss []workspace, old, to string) ([]string, error) {
+	have := byNum(wss, old)
+	switch {
+	case to == "":
+		return nil, errors.New("not a usable project name")
+	case to == old:
+		return nil, nil
+	case len(have) == 0 && !slices.Contains(s.Recent, old):
+		return nil, errors.New("no project " + old)
+	case len(byNum(wss, to)) > 0 || slices.Contains(s.Recent, to):
+		return nil, errors.New("project " + to + " already exists")
+	}
+	var cmds []string
+	for _, w := range sorted(have) {
+		n, _ := parseName(w.Name)
+		n.Project = to
+		cmds = append(cmds, "rename workspace "+quote(w.Name)+" to "+quote(n.String()))
+	}
+	if p, ok := s.Projects[old]; ok {
+		s.Projects[to] = p
+		delete(s.Projects, old)
+	}
+	for i, r := range s.Recent {
+		if r == old {
+			s.Recent[i] = to
+		}
+	}
+	if s.Active == old {
+		s.Active = to
+	}
+	return cmds, nil
 }
 
 // follow makes the project that has the focus the active one, so that

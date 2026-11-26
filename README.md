@@ -21,6 +21,7 @@ it, and the label is only there for reading and searching.
 | `Mod+i` | Focus the next output (a toggle with two) |
 | `Mod+Shift+i` | Move the focused window to the next output |
 | `Mod+n` | Label the current workspace (`-` clears it) |
+| `Mod+Shift+n` | Rename the active project |
 | `Mod+Shift+p` | Send window to another project |
 | `Mod+Control+p` | Move the whole workspace to another project |
 

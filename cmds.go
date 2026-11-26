@@ -117,6 +117,8 @@ func (a *app) dispatch(cmd string, args []string) error {
 		}
 	case "label":
 		return a.label(args)
+	case "rename":
+		return a.rename(args)
 	case "menu":
 		return a.menu()
 	case "adopt":
@@ -248,6 +250,29 @@ func (a *app) label(args []string) error {
 		return nil
 	}
 	return a.c.run("rename workspace to " + quote(n.String()))
+}
+
+// rename gives the active project a new name, or with two names the
+// project named first.
+func (a *app) rename(args []string) error {
+	old, to := a.st.Active, strings.Join(args, "")
+	switch len(args) {
+	case 0:
+		var ok bool
+		if to, ok = a.away(func() (string, bool) { return input("rename project " + old + " to") }); !ok {
+			return nil
+		}
+	case 1:
+	case 2:
+		old, to = args[0], args[1]
+	default:
+		return errors.New("rename takes [OLD] NEW")
+	}
+	cmds, err := a.st.rename(a.wss, old, cleanProject(to))
+	if err != nil {
+		return err
+	}
+	return a.commit(cmds...)
 }
 
 // menu offers every window and workspace, most recently used first.
